@@ -11,6 +11,7 @@ import org.junit.runners.MethodSorters;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -47,10 +48,8 @@ The main class CustomCache.java has TODO where you can put your code.
 Feel free to create additional classes both top level and nested for this implementation.
 To test the solution, you can run the Unit test using the IDE or run the maven package target.
  */
-@FixMethodOrder(MethodSorters.DEFAULT)
+
 public class CustomCacheTest {
-
-
     @Test
     public void testWrapperTypes() throws Exception {
         CustomCache customCache = new CustomCache();
@@ -175,7 +174,7 @@ public class CustomCacheTest {
 
     }
 
-    @Test
+    @Test(timeout =25000)
     public void testWrapperTypesThreaded() throws Exception {
         CustomCache customCache = new CustomCache();
         Double aDouble = Double.valueOf(100);
@@ -229,6 +228,38 @@ public class CustomCacheTest {
         Assert.assertEquals(null, customCache.get(aDouble));
 
         customCache.put(21,1);
+        Assert.assertEquals(1, customCache.get(21));
+
+    }
+    @Test(timeout =7000)
+    public void testWrapperTypesConcurrentReadAndWrite() throws Exception {
+        CustomCache customCache = new CustomCache();
+
+        Thread writer = new Thread(()->{
+            Date end = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+            int i=0;
+            while(System.currentTimeMillis() < end.getTime()){
+                if(i==Integer.MAX_VALUE/2){
+                    i=0;
+                }
+                if(i != 21){
+                    customCache.put(i,i);
+                }
+                i++;
+            }
+        });
+        Thread reader = new Thread(()->{
+            Date end = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
+            while(System.currentTimeMillis() < end.getTime()){
+                Assert.assertEquals(1, customCache.get(21));
+            }
+        });
+
+        customCache.put(21,1);
+        writer.start();
+        reader.start();
+        reader.join();
+        writer.join();
         Assert.assertEquals(1, customCache.get(21));
     }
 

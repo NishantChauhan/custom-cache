@@ -5,8 +5,7 @@ import com.nishant.customcache.interfaces.Expirable;
 import com.nishant.customcache.model.KeyTypeCacheEntry;
 import com.nishant.customcache.services.ExpirationService;
 
-import java.util.LinkedHashSet;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -15,7 +14,7 @@ public class CustomCache<K, V> implements Expirable {
     public CustomCache() {
     }
 
-    private final LinkedHashSet<KeyTypeCacheEntry<K, V>> keyTypeCache = new LinkedHashSet<>();
+    private final Set<KeyTypeCacheEntry<K, V>> keyTypeCache = Collections.synchronizedSet(new LinkedHashSet<>());
     private final ExpirationService cacheExpirationService = new ExpirationService();
 
     @Override
@@ -35,7 +34,7 @@ public class CustomCache<K, V> implements Expirable {
     }
     /** Return the value associated to key without mutating the state. */
     public V get(K key) {
-        synchronized (this.keyTypeCache) {
+        synchronized (keyTypeCache) {
             return getKeyCacheEntry(key).flatMap(keyTypeCacheEntry -> keyTypeCacheEntry.getEntry(key))
                     .orElse(null);
         }
@@ -61,7 +60,7 @@ public class CustomCache<K, V> implements Expirable {
             keyValueTypeCacheEntry = getKeyCacheEntry(key);
             if (keyValueTypeCacheEntry.isPresent()) {
                 boolean removed = keyValueTypeCacheEntry.get().removeEntry(key);
-                if (keyValueTypeCacheEntry.get().getChildren().isEmpty()) {
+                if (keyValueTypeCacheEntry.get().isEmpty()) {
                     removeCacheEntry(keyValueTypeCacheEntry.get());
                 }
                 return removed;
@@ -82,7 +81,7 @@ public class CustomCache<K, V> implements Expirable {
     private Optional<KeyTypeCacheEntry<K, V>> existingKeyEntryHandling(K key, V value) {
         Optional<KeyTypeCacheEntry<K, V>> keyTypeEntry = getKeyCacheEntry(key);
         if(keyTypeEntry.isPresent()){
-            if (!keyTypeEntry.get().isSameHierarchy(value)) {
+            if (!keyTypeEntry.get().matchesHighestTypeOfValue(value)) {
                 throw new RuntimeException(
                         "Object of class [" + value.getClass() + "] not allowable for this Key Type [" + key.getClass() + "]. " +
                                 "Allowed types are [" + keyTypeEntry.get().getValueType() + "] or it sub and super types");

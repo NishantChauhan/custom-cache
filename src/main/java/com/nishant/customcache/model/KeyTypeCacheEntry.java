@@ -4,9 +4,7 @@ import com.nishant.customcache.interfaces.ExpirableItem;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Getter
 @NoArgsConstructor
@@ -19,7 +17,7 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
 
     private Class<?> keyType;
     private Class<?> valueType;
-    private final HashSet<KeyValuePair<K, V>> children = new HashSet<>();
+    private final Set<KeyValuePair<K, V>> children = Collections.synchronizedSet(new HashSet<>());
 
 
     public void addEntry(K key, V value) {
@@ -28,6 +26,7 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
             children.remove(pair);
             children.add(pair);
         }
+
     }
 
     public Optional<V> getEntry(K key) {
@@ -44,7 +43,7 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
         }
     }
 
-    private Class<?> getHighestType(Class<?> valueClazz) {
+    private static Class<?> getHighestType(Class<?> valueClazz) {
         Class<?> valueHighestType = valueClazz;
         while (!valueClazz.equals(Object.class)) {
             valueHighestType = valueClazz;
@@ -53,7 +52,7 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
         return valueHighestType;
     }
 
-    public boolean isSameHierarchy(V value) {
+    public boolean matchesHighestTypeOfValue(V value) {
         return this.valueType.equals(getHighestType(value.getClass()));
     }
 
@@ -68,5 +67,11 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
     @Override
     public int hashCode() {
         return Objects.hash(keyType);
+    }
+
+    public boolean isEmpty() {
+        synchronized (children){
+            return children.isEmpty();
+        }
     }
 }
