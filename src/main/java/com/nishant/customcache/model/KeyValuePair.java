@@ -1,18 +1,24 @@
 package com.nishant.customcache.model;
 
+import com.nishant.customcache.annotations.Immutable;
+import com.nishant.customcache.annotations.ThreadSafe;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 
 
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
+@ThreadSafe
+@Immutable
 public class KeyValuePair<K, V> {
     private K key;
     private V value;
+
+    private KeyValuePair(){
+
+    }
 
     @Override
     @SuppressWarnings("unchecked")

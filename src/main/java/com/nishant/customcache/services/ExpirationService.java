@@ -1,11 +1,13 @@
 package com.nishant.customcache.services;
 
+import com.nishant.customcache.annotations.ThreadSafe;
 import com.nishant.customcache.interfaces.ExpirableItem;
 import com.nishant.customcache.interfaces.Expirable;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+@ThreadSafe
 public class ExpirationService {
     ScheduledExecutorService scheduledService = new ScheduledThreadPoolExecutor(10);
 
