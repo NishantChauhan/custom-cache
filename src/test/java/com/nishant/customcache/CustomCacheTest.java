@@ -1,11 +1,13 @@
 package com.nishant.customcache;
 
-import com.nishant.customcache.common.Square;
 import com.nishant.customcache.common.Rectangle;
 import com.nishant.customcache.common.Shape;
 import com.nishant.customcache.common.ShapeKey;
+import com.nishant.customcache.common.Square;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -14,8 +16,40 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author cannot disclose
+Problem description
+An application needs a lightweight cache. For various reasons, reuse any of the readily available caching solutions is not an option.
+Hence, we need to create a home-grown solution.
+You have been tasked with creating this cache. Here are the acceptance criteria this cache solution.
+
+Must Haves:
+1.	At the bare minimum the cache MUST be able to perform add(K key, V value) and get(Object) operations.
+2.	The cache has its own type safety rules.
+i.	User can add key of any type and value as long as a key of that type is not already present.
+ii.	Once a unique key type is added any subsequent entries should allow values which are of the same type or its subclass/subtype.
+Example: Let’s say we have a class hierarchy of Shape -> Rectangle -> Square
+The user should be able to add objects of all these classes to the cache against the same Key object say ShapeKey
+but if he tries to add a string or any object not from the Shape hierarchy against the ShapeKey it should fail.
+Once ShapeKey is removed from the cache then he should be able to add a String or any other object as value to ShapeKey.
+There are unit test covering this scenario
+(Eg: testSuperAndSubTypesTypes_RemoveAndAdd).
+
+3.	The caching solution should work in a single JVM multithreaded environment with no loss of functionality.
+
+Nice to Haves:
+4.	Avoid using any of the readily available java Map implementations to build the cache or to store caching data.
+Usage of List, Set, Arrays or any other Collection implementations is fine.
+5.	Solution allows for items to expire from cache at a preconfigured interval and this should be configurable at a key type level.
+Once a key type expires the rule of type safety should get reset.
+
+Getting Started:
+A Maven based starter project file(s) have the unit tests and value objects which can be used as key and value for the cache.
+The main class CustomCache.java has TODO where you can put your code.
+Feel free to create additional classes both top level and nested for this implementation.
+To test the solution, you can run the Unit test using the IDE or run the maven package target.
  */
+@FixMethodOrder(MethodSorters.DEFAULT)
 public class CustomCacheTest {
+
 
     @Test
     public void testWrapperTypes() throws Exception {
@@ -76,6 +110,7 @@ public class CustomCacheTest {
                     "Allowed types are [class com.nishant.customcache.common.Shape] or it sub and super types", e.getMessage());
         }
     }
+
 
     @Test
     public void testSuperAndSubTypesTypes_RemoveAndAdd() throws Exception {
@@ -185,7 +220,7 @@ public class CustomCacheTest {
         Assert.assertEquals("World", customCache.get("Hello"));
         Assert.assertEquals(aDouble1, customCache.get(aDouble));
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        Thread.sleep(TimeUnit.SECONDS.toMillis(15));
 
         Assert.assertEquals(null, customCache.get(21));
         Assert.assertEquals(null, customCache.get(20));

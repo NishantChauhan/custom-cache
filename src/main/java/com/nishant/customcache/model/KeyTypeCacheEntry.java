@@ -1,42 +1,16 @@
 package com.nishant.customcache.model;
 
 import com.nishant.customcache.interfaces.ExpirableItem;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class KeyValuePair<K, V> {
-        K key;
-        V value;
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            KeyValuePair<K, V> that = (KeyValuePair<K, V>) o;
-            return Objects.equals(key, that.key);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(key);
-        }
-    }
 
     public KeyTypeCacheEntry(Class<?> keyType, Class<?> valueType) {
         this.keyType = keyType;
@@ -45,22 +19,13 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
 
     private Class<?> keyType;
     private Class<?> valueType;
-    private final LinkedList<KeyValuePair<K, V>> children = new LinkedList<>();
+    private final HashSet<KeyValuePair<K, V>> children = new HashSet<>();
 
 
     public void addEntry(K key, V value) {
         synchronized (children) {
             KeyValuePair<K, V> pair = new KeyValuePair<>(key, value);
-            if (!children.isEmpty()) {
-                children.stream()
-                        .filter(child -> child.equals(pair))
-                        .findFirst()
-                        .ifPresent(
-                                (child) -> {
-                                    child.value = value;
-                                    return;
-                                });
-            }
+            children.remove(pair);
             children.add(pair);
         }
     }
@@ -68,8 +33,8 @@ public class KeyTypeCacheEntry<K, V> implements ExpirableItem {
     public Optional<V> getEntry(K key) {
         synchronized (children) {
             return children.parallelStream()
-                    .filter(child -> child.key.equals(key))
-                    .map(child -> child.value).findFirst();
+                    .filter(child -> child.getKey().equals(key))
+                    .map(child -> child.getValue()).findFirst();
         }
     }
 
